@@ -562,7 +562,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
                 queryString = queryString + "                       FROM        StockTransfers INNER JOIN " + "\r\n";
                 queryString = queryString + "                                   StockTransferDetails ON StockTransfers.EntryDate <= @ToDate AND ROUND(StockTransferDetails.Quantity - StockTransferDetails.QuantityReceipt, " + (int)GlobalEnums.rndAmount + ") > 0 AND " + this.WarehouseJournalWarehouseFilter("StockTransfers") + " AND " + this.WarehouseJournalCommodityFilter("StockTransferDetails") + " AND StockTransfers.StockTransferID = StockTransferDetails.StockTransferID " + "\r\n";
                 if (isAmountIncluded)
-                    queryString = queryString + "                               LEFT JOIN WarehouseBalancePrice ON WarehouseBalancePrice.EntryDate = @EntryDate AND StockTransferDetails.CommodityID = WarehouseBalancePrice.CommodityID " + "\r\n";
+                    queryString = queryString + "                               LEFT JOIN WarehouseBalancePrice ON WarehouseBalancePrice.EntryDate = dbo.EOMONTHTIME(@ToDate, 9999) AND StockTransferDetails.CommodityID = WarehouseBalancePrice.CommodityID " + "\r\n";
 
 
                 queryString = queryString + "                       UNION ALL" + "\r\n";
@@ -571,7 +571,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
                 queryString = queryString + "                       FROM        StockTransfers INNER JOIN " + "\r\n";
                 queryString = queryString + "                                   GoodsReceiptDetails ON StockTransfers.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate AND " + this.WarehouseJournalWarehouseFilter("StockTransfers") + " AND " + this.WarehouseJournalCommodityFilter("GoodsReceiptDetails") + " AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND StockTransfers.StockTransferID = GoodsReceiptDetails.VoucherID " + "\r\n";
                 if (isAmountIncluded)
-                    queryString = queryString + "                               LEFT JOIN WarehouseBalancePrice ON WarehouseBalancePrice.EntryDate = @EntryDate AND GoodsReceiptDetails.CommodityID = WarehouseBalancePrice.CommodityID " + "\r\n";
+                    queryString = queryString + "                               LEFT JOIN WarehouseBalancePrice ON WarehouseBalancePrice.EntryDate = dbo.EOMONTHTIME(@ToDate, 9999) AND GoodsReceiptDetails.CommodityID = WarehouseBalancePrice.CommodityID " + "\r\n";
                 // --ENDING: PENDING STOCKTRANSFER   //END
             }
 
