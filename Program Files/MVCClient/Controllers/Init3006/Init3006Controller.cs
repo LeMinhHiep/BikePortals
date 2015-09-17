@@ -134,7 +134,9 @@ namespace MVCClient.Controllers.Init3006
         public ActionResult Import072015()
         {
 
-            //return View();
+            return View();
+            return View();
+            return View();
 
 
             this.purchaseInvoiceService.UserID = this.purchaseOrderService.UserID;
