@@ -40,6 +40,7 @@ function handleOKEvent(salesInvoiceGridDataSource, quotationGridDataSource) {
         dataRow.set("GrossPrice", quotationGridDataItem.GrossPrice);
 
         dataRow.set("Remarks", quotationGridDataItem.Remarks);
+        dataRow.set("IsBonus", quotationGridDataItem.IsBonus);
         dataRow.set("IsWarrantyClaim", quotationGridDataItem.IsWarrantyClaim);
     }
 }

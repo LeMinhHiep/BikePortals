@@ -70,8 +70,9 @@
                             columns.Bound(p => p.CommodityName).DisplayNameTitle().Filterable(false).Width(200)
                                 .ClientFooterTemplate("Tổng cộng:")
                                 .ClientTemplate("#= CommodityName #" +
-                                        "<div id='commodityCode' #= (IsWarrantyClaim == true) ? style='color:darkred;' : '' # > #= CommodityCode # </div>" +
-                                        "<div id='isWarrantyClaim'>#= (IsWarrantyClaim == true) ? '(Khiếu nại bảo hành)' : '' #</div>" +
+                                        "<div class = 'multiline-grid'> #= CommodityCode # </div>" +
+                                        "<div class = 'isWarrantyClaim'> #= (IsWarrantyClaim == true) ? '[Khiếu nại bảo hành]' : '' #</div>" +
+                                        "<div class = 'isBonus'> #= (IsWarrantyClaim == false && IsBonus == true) ? '[Quà tặng]' : '' #</div>" +
                                         "<input type='hidden' name='QuotationViewDetails[#= index(data) #].CommodityName' value='#= CommodityName #' />");
 
 
@@ -123,6 +124,9 @@
 
                             columns.Bound(p => p.Remarks).DisplayNameTitle().Filterable(false).Hidden()
                                 .ClientTemplate("#= (Remarks == null)? '' : Remarks #" + "<input type='hidden' name='QuotationViewDetails[#= index(data) #].Remarks' value='#= (Remarks == null) ? '' : Remarks #' />");
+
+                            columns.Bound(p => p.IsBonus).DisplayNameTitle().Filterable(false).Hidden()
+                                .ClientTemplate("#= (IsBonus == null)? '' : IsBonus #" + "<input type='hidden' name='QuotationViewDetails[#= index(data) #].IsBonus' value='#= (IsBonus == null) ? '' : IsBonus #' />");
                             columns.Bound(p => p.IsWarrantyClaim).DisplayNameTitle().Filterable(false).Hidden()
                                 .ClientTemplate("#= (IsWarrantyClaim == null)? '' : IsWarrantyClaim #" + "<input type='hidden' name='QuotationViewDetails[#= index(data) #].IsWarrantyClaim' value='#= (IsWarrantyClaim == null) ? '' : IsWarrantyClaim #' />");
 
@@ -148,7 +152,7 @@
                                 rowNumber = 0;
                                 }
                             </text>);
-                            events.DataBound(@<text>
+                            @*events.DataBound(@<text>
                                 function(e) {
                                 var grid = $("#kendoGridDetails").data("kendoGrid");
                                 var data = grid.dataSource.data();
@@ -159,7 +163,7 @@
                                 }
                                 });
                                 }
-                            </text>);
+                            </text>);*@
                         })
                         .DataSource(dataSource => dataSource
                             .Ajax()
@@ -172,6 +176,7 @@
                                 model.Field(m => m.QuotationID).DefaultValue(@Model.QuotationID);
                                 model.Field(m => m.Quantity).DefaultValue(1);
                                 model.Field(m => m.DiscountPercent).DefaultValue(0);
+                                model.Field(m => m.IsBonus).DefaultValue(false);
                                 model.Field(m => m.IsWarrantyClaim).DefaultValue(false);
                             })
                             .Events(events =>
@@ -260,24 +265,3 @@
 
 <link href="@Url.Content("~/Content/CustomCss/FourColumn.css")" rel="stylesheet" type="text/css" />
 <script src="@Url.Content("~/Scripts/Helpers/KendoGrid/gridHelper.js")"></script>
-
-<script type="text/javascript">
-
-    $(document.body).keydown(function (e) {
-        if (e.keyCode == 120) {
-            var entityGrid = $("#kendoGridDetails").data("kendoGrid");
-            var selectedItem = entityGrid.dataItem(entityGrid.select());
-            if (selectedItem != undefined) {
-                selectedItem.set("GrossPrice", 0);
-                selectedItem.set("IsWarrantyClaim", true);
-                entityGrid.refresh();
-            }
-        }
-    });
-</script>
-
-<style type="text/css">
-    #isWarrantyClaim {
-        color: darkred;
-    }
-</style>

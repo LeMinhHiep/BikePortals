@@ -1,4 +1,4 @@
-﻿require(["commonEditWithDetail", "gridWidgetSubscribeChange", "gridDatasourceDiscountSubscribe", "gridEditorCommodityInvoked"], function (commonEditWithDetail, gridWidgetSubscribeChange, gridDatasourceDiscountSubscribe, gridEditorCommodityInvoked) {
+﻿require(["commonEditWithDetail", "gridWidgetSubscribeChange", "gridDatasourceDiscountSubscribe", "gridEditorCommodityInvoked", "gridHandleKeyboardSubscribe"], function (commonEditWithDetail, gridWidgetSubscribeChange, gridDatasourceDiscountSubscribe, gridEditorCommodityInvoked, gridHandleKeyboardSubscribe) {
 
 });
 

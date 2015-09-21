@@ -419,6 +419,7 @@
           <Property Name="Amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
           <Property Name="VATAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
           <Property Name="GrossAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="IsBonus" Type="bit" />
           <Property Name="IsWarrantyClaim" Type="bit" />
           <Property Name="Remarks" Type="nvarchar" MaxLength="100" />
         </EntityType>
@@ -505,6 +506,7 @@
           <Property Name="Amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
           <Property Name="VATAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
           <Property Name="GrossAmount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="IsBonus" Type="bit" />
           <Property Name="IsWarrantyClaim" Type="bit" />
           <Property Name="Remarks" Type="nvarchar" MaxLength="100" />
         </EntityType>
@@ -2582,6 +2584,7 @@
           <Property Type="Int32" Name="CommodityTypeID" Nullable="false" />
           <Property Type="Decimal" Name="ListedPrice" Nullable="false" Precision="18" Scale="2" />
           <Property Type="Decimal" Name="GrossPrice" Nullable="false" Precision="18" Scale="2" />
+          <Property Type="Boolean" Name="IsBonus" Nullable="true" />
         </ComplexType>
         <ComplexType Name="CommoditiesInGoodsReceipt">
           <Property Type="Int32" Name="GoodsReceiptDetailID" Nullable="false" />
@@ -2620,6 +2623,7 @@
           <Property Type="Int32" Name="CommodityTypeID" Nullable="false" />
           <Property Type="Decimal" Name="ListedPrice" Nullable="false" Precision="18" Scale="2" />
           <Property Type="Decimal" Name="GrossPrice" Nullable="false" Precision="18" Scale="2" />
+          <Property Type="Boolean" Name="IsBonus" Nullable="true" />
         </ComplexType>
         <ComplexType Name="ServiceContractGetVehiclesInvoice">
           <Property Type="Int32" Name="SalesInvoiceDetailID" Nullable="false" />
@@ -2767,6 +2771,7 @@
           <Property Type="String" Name="WarehouseCode" Nullable="true" MaxLength="200" />
           <Property Type="Decimal" Name="ListedPrice" Nullable="false" Precision="18" Scale="2" />
           <Property Type="Decimal" Name="GrossPrice" Nullable="false" Precision="18" Scale="2" />
+          <Property Type="Boolean" Name="IsBonus" Nullable="true" />
         </ComplexType>
         <ComplexType Name="TransferOrderViewDetail">
           <Property Type="Int32" Name="TransferOrderDetailID" Nullable="false" />
@@ -3937,6 +3942,7 @@
           <NavigationProperty Name="ServiceContracts" Relationship="TotalBikePortalsModel.FK_ServiceContracts_SalesInvoiceDetails" FromRole="SalesInvoiceDetail" ToRole="ServiceContract" />
           <NavigationProperty Name="QuotationDetail" Relationship="TotalBikePortalsModel.FK_SalesInvoiceDetails_QuotationDetails" FromRole="SalesInvoiceDetail" ToRole="QuotationDetail" />
           <Property Name="LocationID" Type="Int32" Nullable="false" />
+          <Property Name="IsBonus" Type="Boolean" />
         </EntityType>
         <Association Name="FK_Commodities_CommodityCategories">
           <End Type="TotalBikePortalsModel.CommodityCategory" Role="CommodityCategory" Multiplicity="1" />
@@ -4179,6 +4185,7 @@
           <NavigationProperty Name="Quotation" Relationship="TotalBikePortalsModel.FK_QuotationDetails_Quotations" FromRole="QuotationDetail" ToRole="Quotation" />
           <NavigationProperty Name="SalesInvoiceDetails" Relationship="TotalBikePortalsModel.FK_SalesInvoiceDetails_QuotationDetails" FromRole="QuotationDetail" ToRole="SalesInvoiceDetail" />
           <Property Name="LocationID" Type="Int32" Nullable="false" />
+          <Property Name="IsBonus" Type="Boolean" />
         </EntityType>
         <Association Name="FK_QuotationDetails_Commodities">
           <End Type="TotalBikePortalsModel.Commodity" Role="Commodity" Multiplicity="1" />
@@ -4580,6 +4587,7 @@
                 <ScalarProperty Name="CommodityTypeID" ColumnName="CommodityTypeID" />
                 <ScalarProperty Name="ListedPrice" ColumnName="ListedPrice" />
                 <ScalarProperty Name="GrossPrice" ColumnName="GrossPrice" />
+                <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
@@ -4629,6 +4637,7 @@
                 <ScalarProperty Name="CommodityTypeID" ColumnName="CommodityTypeID" />
                 <ScalarProperty Name="ListedPrice" ColumnName="ListedPrice" />
                 <ScalarProperty Name="GrossPrice" ColumnName="GrossPrice" />
+                <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
@@ -4817,6 +4826,7 @@
                 <ScalarProperty Name="WarehouseCode" ColumnName="WarehouseCode" />
                 <ScalarProperty Name="ListedPrice" ColumnName="ListedPrice" />
                 <ScalarProperty Name="GrossPrice" ColumnName="GrossPrice" />
+                <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
               </ComplexTypeMapping>
             </ResultMapping>
           </FunctionImportMapping>
@@ -5485,6 +5495,7 @@
           <EntitySetMapping Name="SalesInvoiceDetails">
             <EntityTypeMapping TypeName="TotalBikePortalsModel.SalesInvoiceDetail">
               <MappingFragment StoreEntitySet="SalesInvoiceDetails">
+                <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
                 <ScalarProperty Name="LocationID" ColumnName="LocationID" />
                 <ScalarProperty Name="Remarks" ColumnName="Remarks" />
                 <ScalarProperty Name="IsWarrantyClaim" ColumnName="IsWarrantyClaim" />
@@ -5514,6 +5525,7 @@
           <EntitySetMapping Name="QuotationDetails">
             <EntityTypeMapping TypeName="TotalBikePortalsModel.QuotationDetail">
               <MappingFragment StoreEntitySet="QuotationDetails">
+                <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
                 <ScalarProperty Name="LocationID" ColumnName="LocationID" />
                 <ScalarProperty Name="Remarks" ColumnName="Remarks" />
                 <ScalarProperty Name="IsWarrantyClaim" ColumnName="IsWarrantyClaim" />

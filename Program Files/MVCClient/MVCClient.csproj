@@ -773,6 +773,8 @@
     <Content Include="Scripts\Controllers\Root\Shared\Common\kpopupWindow.js" />
     <Content Include="Scripts\Controllers\Root\Shared\Edits\gridDatasourceQuantity.js" />
     <Content Include="Scripts\Controllers\Root\Shared\Edits\gridEditorWarehouse.js" />
+    <Content Include="Scripts\Controllers\Root\Shared\Edits\gridHandleKeyboard.js" />
+    <Content Include="Scripts\Controllers\Root\Shared\Edits\gridHandleKeyboardSubscribe.js" />
     <Content Include="Scripts\Controllers\Root\Shared\Edits\gridWidget.js" />
     <Content Include="Scripts\Controllers\Root\Shared\Edits\gridWidgetGoodsReceipt.js" />
     <Content Include="Scripts\Controllers\Root\Shared\Edits\gridWidgetGoodsReceiptSubscribeChange.js" />

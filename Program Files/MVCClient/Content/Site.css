@@ -754,4 +754,10 @@ a[class^='info-bar'] > img{
 }
 
 
+.isWarrantyClaim, .isBonus {
+    color: orange;
+}
 
+.isBonus {
+    color: darkcyan;
+}

@@ -58,6 +58,7 @@ namespace MVCDTO.SalesTasks
         public decimal GrossAmount { get; set; }
         [Display(Name = "Ghi chú")]
         public string Remarks { get; set; }
+        public Nullable<bool> IsBonus { get; set; }
         public Nullable<bool> IsWarrantyClaim { get; set; }
     }
 

@@ -108,6 +108,8 @@
                                 .ClientFooterTemplate("Total:")
                                 .ClientTemplate("#= CommodityName #" +
                                         "<div class = 'multiline-grid'> #= CommodityCode #</div>" +
+                                        "<div class = 'isWarrantyClaim'> #= (IsWarrantyClaim == true) ? '[Khiếu nại bảo hành]' : '' #</div>" +
+                                        "<div class = 'isBonus'> #= (IsWarrantyClaim == false && IsBonus == true) ? '[Quà tặng]' : '' #</div>" +
                                         "<input type='hidden' name='SalesInvoiceDetails[#= index(data) #].CommodityName' value='#= CommodityName #' />");
 
                             columns.Bound(p => p.CommodityTypeID).DisplayNameTitle().Filterable(false).Hidden()
@@ -156,6 +158,11 @@
                             columns.Bound(p => p.Remarks).DisplayNameTitle().Filterable(false).Hidden()
                                 .ClientTemplate("#= (Remarks == null)? '' : Remarks #" + "<input type='hidden' name='SalesInvoiceDetails[#= index(data) #].Remarks' value='#= (Remarks == null) ? '' : Remarks #' />");
 
+                            columns.Bound(p => p.IsBonus).DisplayNameTitle().Filterable(false).Hidden()
+                                .ClientTemplate("#= (IsBonus == null)? '' : IsBonus #" + "<input type='hidden' name='SalesInvoiceDetails[#= index(data) #].IsBonus' value='#= (IsBonus == null) ? '' : IsBonus #' />");
+                            columns.Bound(p => p.IsWarrantyClaim).DisplayNameTitle().Filterable(false).Hidden()
+                                .ClientTemplate("#= (IsWarrantyClaim == null)? '' : IsWarrantyClaim #" + "<input type='hidden' name='SalesInvoiceDetails[#= index(data) #].IsWarrantyClaim' value='#= (IsWarrantyClaim == null) ? '' : IsWarrantyClaim #' />");
+
                             columns.Command(command => { command.Destroy().Text("<span class='command' ></span>"); }).Width(50);
                         })
                         .Filterable()
@@ -193,6 +200,18 @@
                         .Events(events =>
                         {
                             events.DataBinding(@<text> function(e) {rowNumber = 0;} </text>);
+                            @*events.DataBound(@<text>
+                                function(e) {
+                                    var grid = $("#kendoGridDetails").data("kendoGrid");
+                                    var data = grid.dataSource.data();
+                                    $.each(data, function (i, row) {
+                                        var isWarrantyClaim = row.IsWarrantyClaim;
+                                        if (isWarrantyClaim == true) {
+                                            $('tr[data-uid="' + row.uid + '"]').css("color", "darkred");
+                                        }
+                                    });
+                                }
+                            </text>);*@
                         })
                         .DataSource(dataSource => dataSource
                             .Ajax()
@@ -203,8 +222,10 @@
                                 model.Id(x => x.SalesInvoiceDetailID);
                                 model.Field(m => m.SalesInvoiceDetailID).DefaultValue(0);
                                 model.Field(m => m.SalesInvoiceID).DefaultValue(@Model.SalesInvoiceID);
-                                model.Field(m => m.Quantity).DefaultValue(0);
+                                model.Field(m => m.Quantity).DefaultValue(1);
                                 model.Field(m => m.DiscountPercent).DefaultValue(0);
+                                model.Field(m => m.IsBonus).DefaultValue(false);
+                                model.Field(m => m.IsWarrantyClaim).DefaultValue(false);
                             })
                             .Events(events =>
                             {

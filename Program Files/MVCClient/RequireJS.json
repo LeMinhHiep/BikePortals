@@ -32,6 +32,11 @@
         "gridWidgetGoodsReceiptSubscribeChange": "Controllers/Root/Shared/Edits/gridWidgetGoodsReceiptSubscribeChange",
 
 
+        "gridHandleKeyboard": "Controllers/Root/Shared/Edits/gridHandleKeyboard",
+        "gridHandleKeyboardSubscribe": "Controllers/Root/Shared/Edits/gridHandleKeyboardSubscribe",
+
+
+
         "kindexGrid": "Controllers/Root/Shared/Indexs/kindexGrid",
         "kenGridValidator": "Controllers/Root/Shared/Validations/kenGridValidator",
         "kpopupWindow": "Controllers/Root/Shared/Common/kpopupWindow",

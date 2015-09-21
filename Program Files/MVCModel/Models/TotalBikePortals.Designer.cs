@@ -1,4 +1,4 @@
-﻿// T4 code generation is enabled for model 'D:\MVC Project\TotalBikePortals\SVN11AUG2015\Program Files\MVCModel\Models\TotalBikePortals.edmx'. 
+﻿// T4 code generation is enabled for model 'E:\MVC PROJECT\TotalBikePortals\GitHub16SEP15\trunk\Program Files\MVCModel\Models\TotalBikePortals.edmx'. 
 // To enable legacy code generation, change the value of the 'Code Generation Strategy' designer
 // property to 'Legacy ObjectContext'. This property is available in the Properties Window when the model
 // is open in the designer.
