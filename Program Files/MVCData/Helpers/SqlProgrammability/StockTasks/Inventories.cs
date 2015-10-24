@@ -5,7 +5,6 @@ using System;
 
 namespace MVCData.Helpers.SqlProgrammability.StockTasks
 {
-    //This is new inventory stored procedure
     public class Inventories
     {
 
@@ -23,6 +22,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             this.GetOverStockItems();
             this.WarehouseJournal();
             this.VehicleJournal();
+            this.VehicleCard();
         }
 
 
@@ -630,11 +630,13 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
 
         private void VehicleJournal()
         {
-
-            string queryString = " @FromDate DateTime, @ToDate DateTime " + "\r\n";
+            string queryString = " @WarehouseID int, @FromDate DateTime, @ToDate DateTime " + "\r\n"; //Filter by @WarehouseID to make this stored procedure run faster, but it may be removed without any effect the algorithm
             queryString = queryString + " WITH ENCRYPTION " + "\r\n";
             queryString = queryString + " AS " + "\r\n";
             queryString = queryString + "    BEGIN " + "\r\n";
+
+            queryString = queryString + "       DECLARE     @LocationID int " + "\r\n";
+            queryString = queryString + "       SET         @LocationID = (SELECT LocationID FROM Warehouses WHERE WarehouseID = @WarehouseID) " + "\r\n";
 
             queryString = queryString + "       SELECT      Commodities.CommodityID, Commodities.Code, Commodities.Name, Commodities.SalesUnit, Commodities.LeadTime, " + "\r\n";
             queryString = queryString + "                   VehicleJournalMaster.GoodsReceiptDetailID, VehicleJournalMaster.EntryDate, VehicleJournalMaster.ChassisCode, VehicleJournalMaster.EngineCode, VehicleJournalMaster.ColorCode, " + "\r\n";
@@ -672,22 +674,20 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             //WHINPUT
             queryString = queryString + "                                   SELECT      GoodsReceiptDetails.GoodsReceiptDetailID, ROUND(GoodsReceiptDetails.Quantity - GoodsReceiptDetails.QuantityIssue, " + (int)GlobalEnums.rndQuantity + ") AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, NULL AS MovementDate " + "\r\n";
             queryString = queryString + "                                   FROM        GoodsReceiptDetails " + "\r\n";
-            queryString = queryString + "                                   WHERE       GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.EntryDate < @FromDate AND GoodsReceiptDetails.Quantity > GoodsReceiptDetails.QuantityIssue " + "\r\n";
+            queryString = queryString + "                                   WHERE       GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.EntryDate < @FromDate AND GoodsReceiptDetails.Quantity > GoodsReceiptDetails.QuantityIssue " + "\r\n";
 
             queryString = queryString + "                                   UNION ALL " + "\r\n";
-            //UNDO (CAC CAU SQL CHO INVOICE, WHTRANSFER, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
-            //UNDO WHOUTPUT (INVOICE)
+            //UNDO (CAC CAU SQL CHO INVOICE, StockTransferDetails, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
+            //UNDO SalesInvoiceDetails
             queryString = queryString + "                                   SELECT      GoodsReceiptDetails.GoodsReceiptDetailID, SalesInvoiceDetails.Quantity AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, NULL AS MovementDate " + "\r\n";
             queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
-            queryString = queryString + "                                               SalesInvoiceDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.GoodsReceiptDetailID = SalesInvoiceDetails.GoodsReceiptDetailID " + "\r\n";
-            queryString = queryString + "                                   WHERE       GoodsReceiptDetails.EntryDate < @FromDate AND SalesInvoiceDetails.EntryDate >= @FromDate " + "\r\n";
+            queryString = queryString + "                                               SalesInvoiceDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.GoodsReceiptDetailID = SalesInvoiceDetails.GoodsReceiptDetailID AND GoodsReceiptDetails.EntryDate < @FromDate AND SalesInvoiceDetails.EntryDate >= @FromDate " + "\r\n";
 
             queryString = queryString + "                                   UNION ALL " + "\r\n";
-            //UNDO WHTRANSFER
+            //UNDO StockTransferDetails
             queryString = queryString + "                                   SELECT      GoodsReceiptDetails.GoodsReceiptDetailID, StockTransferDetails.Quantity AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, NULL AS MovementDate " + "\r\n";
             queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
-            queryString = queryString + "                                               StockTransferDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.GoodsReceiptDetailID = StockTransferDetails.GoodsReceiptDetailID " + "\r\n";
-            queryString = queryString + "                                   WHERE       GoodsReceiptDetails.EntryDate < @FromDate AND StockTransferDetails.EntryDate >= @FromDate " + "\r\n";
+            queryString = queryString + "                                               StockTransferDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.GoodsReceiptDetailID = StockTransferDetails.GoodsReceiptDetailID AND GoodsReceiptDetails.EntryDate < @FromDate AND StockTransferDetails.EntryDate >= @FromDate " + "\r\n";
 
 
 
@@ -700,20 +700,20 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                                               CASE WHEN GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.InventoryAdjustment + " THEN GoodsReceiptDetails.Quantity ELSE 0 END AS QuantityInputADJ, " + "\r\n";
             queryString = queryString + "                                               0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, NULL AS MovementDate " + "\r\n";
             queryString = queryString + "                                   FROM        GoodsReceiptDetails " + "\r\n";
-            queryString = queryString + "                                   WHERE       GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + "\r\n";
+            queryString = queryString + "                                   WHERE       GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + "\r\n";
 
-            //OUTPUT (CAC CAU SQL CHO INVOICE, WHTRANSFER, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
+            //OUTPUT (CAC CAU SQL CHO INVOICE, StockTransferDetails, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
             queryString = queryString + "                                   UNION ALL " + "\r\n";
-            //WHOUTPUT (INVOICE) + "\r\n";
+            //SalesInvoiceDetails + "\r\n";
             queryString = queryString + "                                   SELECT      SalesInvoiceDetails.GoodsReceiptDetailID, 0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, SalesInvoiceDetails.Quantity AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, 0 AS MovementDate " + "\r\n"; //DATEDIFF(DAY, GoodsReceiptDetails.EntryDate, SalesInvoiceDetails.EntryDate) AS MovementDate
             queryString = queryString + "                                   FROM        SalesInvoiceDetails " + "\r\n";
-            queryString = queryString + "                                   WHERE       SalesInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND SalesInvoiceDetails.EntryDate >= @FromDate AND SalesInvoiceDetails.EntryDate <= @ToDate " + "\r\n";
+            queryString = queryString + "                                   WHERE       SalesInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND SalesInvoiceDetails.WarehouseID = @WarehouseID AND SalesInvoiceDetails.EntryDate >= @FromDate AND SalesInvoiceDetails.EntryDate <= @ToDate " + "\r\n";
 
             queryString = queryString + "                                   UNION ALL " + "\r\n";
-            //WHTRANSFER
+            //StockTransferDetails
             queryString = queryString + "                                   SELECT      StockTransferDetails.GoodsReceiptDetailID, 0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, StockTransferDetails.Quantity AS QuantityIssueTRF, 0 AS QuantityIssueADJ, 0 AS MovementDate " + "\r\n"; //DATEDIFF(DAY, GoodsReceiptDetails.EntryDate, StockTransferDetails.EntryDate) AS MovementDate
             queryString = queryString + "                                   FROM        StockTransferDetails " + "\r\n";
-            queryString = queryString + "                                   WHERE       StockTransferDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransferDetails.EntryDate >= @FromDate AND StockTransferDetails.EntryDate <= @ToDate " + "\r\n";
+            queryString = queryString + "                                   WHERE       StockTransferDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransferDetails.WarehouseID = @WarehouseID AND StockTransferDetails.EntryDate >= @FromDate AND StockTransferDetails.EntryDate <= @ToDate " + "\r\n";
 
             queryString = queryString + "                                   ) AS GoodsReceiptDetailUnion " + "\r\n";
             queryString = queryString + "                           GROUP BY GoodsReceiptDetailUnion.GoodsReceiptDetailID " + "\r\n";
@@ -727,14 +727,14 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                   SELECT  CONVERT(smalldatetime, '" + new DateTime(1990, 1, 1).ToString("dd/MM/yyyy") + "', 103) AS EntryDate, 0 AS GoodsReceiptDetailID, PurchaseOrderDetails.CommodityID, PurchaseOrderDetails.SupplierID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, " + "\r\n";
             queryString = queryString + "                           0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, (PurchaseOrderDetails.Quantity - PurchaseOrderDetails.QuantityInvoice) AS QuantityOnPurchasing, 0 AS QuantityOnReceipt, 0 AS UnitPrice, 0 AS MovementMIN, 0 AS MovementMAX, 0 AS MovementAVG " + "\r\n";
             queryString = queryString + "                   FROM    PurchaseOrderDetails " + "\r\n";
-            queryString = queryString + "                   WHERE   PurchaseOrderDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseOrderDetails.EntryDate <= @ToDate AND PurchaseOrderDetails.Quantity > PurchaseOrderDetails.QuantityInvoice " + "\r\n";
+            queryString = queryString + "                   WHERE   PurchaseOrderDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseOrderDetails.LocationID = @LocationID AND PurchaseOrderDetails.EntryDate <= @ToDate AND PurchaseOrderDetails.Quantity > PurchaseOrderDetails.QuantityInvoice " + "\r\n";
 
             queryString = queryString + "                   UNION ALL " + "\r\n";
 
             queryString = queryString + "                   SELECT  CONVERT(smalldatetime, '" + new DateTime(1990, 1, 1).ToString("dd/MM/yyyy") + "', 103) AS EntryDate, 0 AS GoodsReceiptDetailID, PurchaseInvoiceDetails.CommodityID, PurchaseOrders.SupplierID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, " + "\r\n";
             queryString = queryString + "                           0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, PurchaseInvoiceDetails.Quantity AS QuantityOnPurchasing, 0 AS QuantityOnReceipt, 0 AS UnitPrice, 0 AS MovementMIN, 0 AS MovementMAX, 0 AS MovementAVG " + "\r\n";
             queryString = queryString + "                   FROM    PurchaseOrders INNER JOIN " + "\r\n";
-            queryString = queryString + "                           PurchaseInvoiceDetails ON PurchaseInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseOrders.PurchaseOrderID = PurchaseInvoiceDetails.PurchaseOrderID " + "\r\n";
+            queryString = queryString + "                           PurchaseInvoiceDetails ON PurchaseInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseOrders.LocationID = @LocationID AND PurchaseOrders.PurchaseOrderID = PurchaseInvoiceDetails.PurchaseOrderID " + "\r\n";
             queryString = queryString + "                   WHERE   PurchaseOrders.EntryDate <= @ToDate AND PurchaseInvoiceDetails.EntryDate > @ToDate  " + "\r\n";
             //--ON SHIP.END
 
@@ -744,30 +744,28 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                   SELECT  CONVERT(smalldatetime, '" + new DateTime(1990, 1, 1).ToString("dd/MM/yyyy") + "', 103) AS EntryDate, 0 AS GoodsReceiptDetailID, PurchaseInvoiceDetails.CommodityID, PurchaseInvoiceDetails.SupplierID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, " + "\r\n";
             queryString = queryString + "                           0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, 0 AS QuantityOnPurchasing, (PurchaseInvoiceDetails.Quantity - PurchaseInvoiceDetails.QuantityReceipt) AS QuantityOnReceipt, 0 AS UnitPrice, 0 AS MovementMIN, 0 AS MovementMAX, 0 AS MovementAVG " + "\r\n";
             queryString = queryString + "                   FROM    PurchaseInvoiceDetails " + "\r\n";
-            queryString = queryString + "                   WHERE   PurchaseInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseInvoiceDetails.EntryDate <= @ToDate AND PurchaseInvoiceDetails.Quantity > PurchaseInvoiceDetails.QuantityReceipt " + "\r\n";
+            queryString = queryString + "                   WHERE   PurchaseInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseInvoiceDetails.LocationID = @LocationID AND PurchaseInvoiceDetails.EntryDate <= @ToDate AND PurchaseInvoiceDetails.Quantity > PurchaseInvoiceDetails.QuantityReceipt " + "\r\n";
 
             queryString = queryString + "                   UNION ALL " + "\r\n";
 
             queryString = queryString + "                   SELECT  CONVERT(smalldatetime, '" + new DateTime(1990, 1, 1).ToString("dd/MM/yyyy") + "', 103) AS EntryDate, 0 AS GoodsReceiptDetailID, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.SupplierID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, " + "\r\n";
             queryString = queryString + "                           0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, 0 AS QuantityOnPurchasing, GoodsReceiptDetails.Quantity AS QuantityOnReceipt, 0 AS UnitPrice, 0 AS MovementMIN, 0 AS MovementMAX, 0 AS MovementAVG " + "\r\n";
             queryString = queryString + "                   FROM    PurchaseInvoices INNER JOIN " + "\r\n";
-            queryString = queryString + "                           GoodsReceiptDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseInvoices.PurchaseInvoiceID = GoodsReceiptDetails.VoucherID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + "\r\n";
-            queryString = queryString + "                   WHERE   PurchaseInvoices.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + "\r\n";
+            queryString = queryString + "                           GoodsReceiptDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseInvoices.LocationID = @LocationID AND PurchaseInvoices.PurchaseInvoiceID = GoodsReceiptDetails.VoucherID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + " AND PurchaseInvoices.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + "\r\n";
 
             queryString = queryString + "                   UNION ALL " + "\r\n";
             //EWHInputVoucherTypeID.EWHTransfer
             queryString = queryString + "                   SELECT  CONVERT(smalldatetime, '" + new DateTime(1990, 1, 1).ToString("dd/MM/yyyy") + "', 103) AS EntryDate, 0 AS GoodsReceiptDetailID, StockTransferDetails.CommodityID, StockTransferDetails.SupplierID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, " + "\r\n";
             queryString = queryString + "                           0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, 0 AS QuantityOnPurchasing, (StockTransferDetails.Quantity - StockTransferDetails.QuantityReceipt) AS QuantityOnReceipt, 0 AS UnitPrice, 0 AS MovementMIN, 0 AS MovementMAX, 0 AS MovementAVG " + "\r\n";
-            queryString = queryString + "                   FROM    StockTransferDetails " + "\r\n";
-            queryString = queryString + "                   WHERE   StockTransferDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransferDetails.EntryDate <= @ToDate AND StockTransferDetails.Quantity > StockTransferDetails.QuantityReceipt " + "\r\n";
+            queryString = queryString + "                   FROM    StockTransfers INNER JOIN " + "\r\n";
+            queryString = queryString + "                           StockTransferDetails ON StockTransfers.StockTransferID = StockTransferDetails.StockTransferID AND StockTransferDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransfers.WarehouseID = @WarehouseID AND StockTransferDetails.EntryDate <= @ToDate AND StockTransferDetails.Quantity > StockTransferDetails.QuantityReceipt " + "\r\n";
 
             queryString = queryString + "                   UNION ALL " + "\r\n";
 
             queryString = queryString + "                   SELECT  CONVERT(smalldatetime, '" + new DateTime(1990, 1, 1).ToString("dd/MM/yyyy") + "', 103) AS EntryDate, 0 AS GoodsReceiptDetailID, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.SupplierID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, " + "\r\n";
             queryString = queryString + "                           0 AS QuantityBegin, 0 AS QuantityInputINV, 0 AS QuantityInputRTN, 0 AS QuantityInputTRF, 0 AS QuantityInputADJ, 0 AS QuantityIssueINV, 0 AS QuantityIssueTRF, 0 AS QuantityIssueADJ, 0 AS QuantityOnPurchasing, GoodsReceiptDetails.Quantity AS QuantityOnReceipt, 0 AS UnitPrice, 0 AS MovementMIN, 0 AS MovementMAX, 0 AS MovementAVG " + "\r\n";
             queryString = queryString + "                   FROM    StockTransfers INNER JOIN " + "\r\n";
-            queryString = queryString + "                           GoodsReceiptDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransfers.StockTransferID = GoodsReceiptDetails.VoucherID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + "\r\n";
-            queryString = queryString + "                   WHERE   StockTransfers.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + "\r\n";
+            queryString = queryString + "                           GoodsReceiptDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransfers.WarehouseID = @WarehouseID AND StockTransfers.StockTransferID = GoodsReceiptDetails.VoucherID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND StockTransfers.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + "\r\n";
             //--ON INPUT.END
 
             queryString = queryString + "                   ) AS VehicleJournalMaster INNER JOIN " + "\r\n";
@@ -781,6 +779,161 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "    END " + "\r\n";
 
             this.totalBikePortalsEntities.CreateStoredProcedure("VehicleJournal", queryString);
+
+        }
+
+
+        private void VehicleCard()
+        {
+            string queryString = " @WarehouseID int, @FromDate DateTime, @ToDate DateTime " + "\r\n"; //Filter by @WarehouseID to make this stored procedure run faster, but it may be removed without any effect the algorithm
+            queryString = queryString + " WITH ENCRYPTION " + "\r\n";
+            queryString = queryString + " AS " + "\r\n";
+            queryString = queryString + "    BEGIN " + "\r\n";
+
+            queryString = queryString + "       DECLARE     @LocationID int " + "\r\n";
+            queryString = queryString + "       SET         @LocationID = (SELECT LocationID FROM Warehouses WHERE WarehouseID = @WarehouseID) " + "\r\n";
+
+            queryString = queryString + "       SELECT      VehicleJournalMaster.GroupName, VehicleJournalMaster.SubGroupName, VehicleJournalMaster.EntryDate, " + "\r\n";
+            queryString = queryString + "                   Commodities.CommodityID, Commodities.Code, Commodities.Name, Commodities.SalesUnit, Commodities.LeadTime, VehicleJournalMaster.ChassisCode, VehicleJournalMaster.EngineCode, VehicleJournalMaster.ColorCode, " + "\r\n";
+            queryString = queryString + "                   ISNULL(Warehouses.LocationID, 0) AS LocationID, ISNULL(Warehouses.WarehouseCategoryID, 0) AS WarehouseCategoryID, ISNULL(Warehouses.WarehouseID, 0) AS WarehouseID, ISNULL(Warehouses.Name, '') AS WarehouseName, " + "\r\n";
+            queryString = queryString + "                   VehicleJournalMaster.QuantityDebit, VehicleJournalMaster.QuantityCredit, " + "\r\n";
+            
+            queryString = queryString + "                   VWCommodityCategories.CommodityCategoryID, " + "\r\n";
+            queryString = queryString + "                   VWCommodityCategories.Name1 AS CommodityCategory1, " + "\r\n";
+            queryString = queryString + "                   VWCommodityCategories.Name2 AS CommodityCategory2, " + "\r\n";
+            queryString = queryString + "                   VWCommodityCategories.Name3 AS CommodityCategory3 " + "\r\n";
+
+            queryString = queryString + "       FROM       (" + "\r\n";
+
+            //--BEGIN-INPUT-OUTPUT-END.END
+            //1.BEGINING
+            //1.1.WHINPUT (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID))
+            //1.1.1.WHINPUT.PurchaseInvoice
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'ĐẦU KỲ ' + CONVERT(VARCHAR, DATEADD (day, -1,  @FromDate), 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, ROUND(GoodsReceiptDetails.Quantity - GoodsReceiptDetails.QuantityIssue, " + (int)GlobalEnums.rndQuantity + ") AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               PurchaseInvoices ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.VoucherID = PurchaseInvoices.PurchaseInvoiceID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + " AND GoodsReceiptDetails.Quantity > GoodsReceiptDetails.QuantityIssue AND GoodsReceiptDetails.EntryDate < @FromDate " + "\r\n";
+
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //1.1.2.WHINPUT.StockTransfer
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'ĐẦU KỲ ' + CONVERT(VARCHAR, DATEADD (day, -1,  @FromDate), 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, ROUND(GoodsReceiptDetails.Quantity - GoodsReceiptDetails.QuantityIssue, " + (int)GlobalEnums.rndQuantity + ") AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               StockTransfers ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.VoucherID = StockTransfers.StockTransferID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND GoodsReceiptDetails.Quantity > GoodsReceiptDetails.QuantityIssue AND GoodsReceiptDetails.EntryDate < @FromDate " + "\r\n";
+
+
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //1.2.UNDO (CAC CAU SQL CHO INVOICE, StockTransferDetails, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
+            //1.2.1.1.UNDO SalesInvoiceDetails (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID)).PurchaseInvoice
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'ĐẦU KỲ ' + CONVERT(VARCHAR, DATEADD (day, -1,  @FromDate), 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, SalesInvoiceDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               SalesInvoiceDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.GoodsReceiptDetailID = SalesInvoiceDetails.GoodsReceiptDetailID AND GoodsReceiptDetails.EntryDate < @FromDate AND SalesInvoiceDetails.EntryDate >= @FromDate INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               PurchaseInvoices ON GoodsReceiptDetails.VoucherID = PurchaseInvoices.PurchaseInvoiceID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + "\r\n";
+
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //1.2.1.2.UNDO SalesInvoiceDetails (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID)).StockTransfer
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'ĐẦU KỲ ' + CONVERT(VARCHAR, DATEADD (day, -1,  @FromDate), 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, SalesInvoiceDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               SalesInvoiceDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.GoodsReceiptDetailID = SalesInvoiceDetails.GoodsReceiptDetailID AND GoodsReceiptDetails.EntryDate < @FromDate AND SalesInvoiceDetails.EntryDate >= @FromDate INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               StockTransfers ON GoodsReceiptDetails.VoucherID = StockTransfers.StockTransferID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + "\r\n";
+
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //1.2.2.1.UNDO StockTransferDetails (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID)).PurchaseInvoice
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'ĐẦU KỲ ' + CONVERT(VARCHAR, DATEADD (day, -1,  @FromDate), 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, StockTransferDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               StockTransferDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.GoodsReceiptDetailID = StockTransferDetails.GoodsReceiptDetailID AND GoodsReceiptDetails.EntryDate < @FromDate AND StockTransferDetails.EntryDate >= @FromDate INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               PurchaseInvoices ON GoodsReceiptDetails.VoucherID = PurchaseInvoices.PurchaseInvoiceID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + "\r\n";
+
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //1.2.2.2.UNDO StockTransferDetails (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID)).StockTransfer
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'ĐẦU KỲ ' + CONVERT(VARCHAR, DATEADD (day, -1,  @FromDate), 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, StockTransferDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               StockTransferDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.GoodsReceiptDetailID = StockTransferDetails.GoodsReceiptDetailID AND GoodsReceiptDetails.EntryDate < @FromDate AND StockTransferDetails.EntryDate >= @FromDate INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               StockTransfers ON GoodsReceiptDetails.VoucherID = StockTransfers.StockTransferID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + "\r\n";
+
+
+            //2.INTPUT (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID))
+            //2.1.INTPUT.PurchaseInvoice
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'TỒN ' + CONVERT(VARCHAR, @ToDate, 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, GoodsReceiptDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               PurchaseInvoices ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.VoucherID = PurchaseInvoices.PurchaseInvoiceID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + " AND GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + "\r\n";
+            //2.2.INTPUT.StockTransfer
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'TỒN ' + CONVERT(VARCHAR, @ToDate, 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, GoodsReceiptDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               StockTransfers ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.VoucherID = StockTransfers.StockTransferID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + "\r\n";
+
+
+
+            //3.OUTPUT (CAC CAU SQL CHO INVOICE, StockTransferDetails, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //3.1.SalesInvoiceDetails + "\r\n";
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'TỒN ' + CONVERT(VARCHAR, @ToDate, 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, 0 AS QuantityDebit, SalesInvoiceDetails.Quantity AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        SalesInvoiceDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               GoodsReceiptDetails ON SalesInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND SalesInvoiceDetails.WarehouseID = @WarehouseID AND SalesInvoiceDetails.GoodsReceiptDetailID = GoodsReceiptDetails.GoodsReceiptDetailID AND SalesInvoiceDetails.EntryDate >= @FromDate AND SalesInvoiceDetails.EntryDate <= @ToDate " + "\r\n";
+
+            queryString = queryString + "                                   UNION ALL " + "\r\n";
+            //3.2.StockTransferDetails
+            queryString = queryString + "                                   SELECT     'HÀNG TỒN KHO' AS GroupName, 'TỒN ' + CONVERT(VARCHAR, @ToDate, 103) AS SubGroupName, GoodsReceiptDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, 0 AS QuantityDebit, StockTransferDetails.Quantity AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                                   FROM        StockTransferDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                                               GoodsReceiptDetails ON StockTransferDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransferDetails.WarehouseID = @WarehouseID AND StockTransferDetails.GoodsReceiptDetailID = GoodsReceiptDetails.GoodsReceiptDetailID AND StockTransferDetails.EntryDate >= @FromDate AND StockTransferDetails.EntryDate <= @ToDate " + "\r\n";
+            //--BEGIN-INPUT-OUTPUT-END.END
+
+
+
+            //B.PENDING
+            //B.1.PENDING.ON SHIP
+            queryString = queryString + "                   UNION ALL " + "\r\n";
+            //--ON SHIP.BEGIN
+            queryString = queryString + "                   SELECT 'XE TRÊN ĐƯỜNG VỀ' AS GroupName, 'ĐÃ ĐẶT HÀNG' AS SubGroupName, PurchaseOrderDetails.EntryDate, PurchaseOrderDetails.CommodityID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, PurchaseOrderDetails.Quantity - PurchaseOrderDetails.QuantityInvoice AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                   FROM    PurchaseOrderDetails " + "\r\n";
+            queryString = queryString + "                   WHERE   PurchaseOrderDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseOrderDetails.LocationID = @LocationID AND PurchaseOrderDetails.EntryDate <= @ToDate AND PurchaseOrderDetails.Quantity > PurchaseOrderDetails.QuantityInvoice " + "\r\n";
+
+            queryString = queryString + "                   UNION ALL " + "\r\n";
+
+            queryString = queryString + "                   SELECT 'XE TRÊN ĐƯỜNG VỀ' AS GroupName, 'ĐÃ ĐẶT HÀNG' AS SubGroupName, PurchaseOrders.EntryDate, PurchaseInvoiceDetails.CommodityID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, PurchaseInvoiceDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                   FROM    PurchaseOrders INNER JOIN " + "\r\n";
+            queryString = queryString + "                           PurchaseInvoiceDetails ON PurchaseInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseOrders.LocationID = @LocationID AND PurchaseOrders.PurchaseOrderID = PurchaseInvoiceDetails.PurchaseOrderID AND PurchaseOrders.EntryDate <= @ToDate AND PurchaseInvoiceDetails.EntryDate > @ToDate " + "\r\n";
+            //--ON SHIP.END
+
+            //B.1.PENDING.ON RECEIPT
+            queryString = queryString + "                   UNION ALL " + "\r\n";
+            //--ON INPUT.BEGIN (CAC CAU SQL DUNG CHO EWHInputVoucherTypeID.EInvoice, EWHInputVoucherTypeID.EReturn, EWHInputVoucherTypeID.EWHTransfer, EWHInputVoucherTypeID.EWHAdjust, EWHInputVoucherTypeID.EWHAssemblyMaster, EWHInputVoucherTypeID.EWHAssemblyDetail LA HOAN TOAN GIONG NHAU)
+            //EWHInputVoucherTypeID.EInvoice
+            queryString = queryString + "                   SELECT 'XE TRÊN ĐƯỜNG VỀ' AS GroupName, 'CHỜ NHẬP KHO' AS SubGroupName, PurchaseInvoiceDetails.EntryDate, PurchaseInvoiceDetails.CommodityID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, PurchaseInvoiceDetails.Quantity - PurchaseInvoiceDetails.QuantityReceipt AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                   FROM    PurchaseInvoiceDetails " + "\r\n";
+            queryString = queryString + "                   WHERE   PurchaseInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseInvoiceDetails.LocationID = @LocationID AND PurchaseInvoiceDetails.EntryDate <= @ToDate AND PurchaseInvoiceDetails.Quantity > PurchaseInvoiceDetails.QuantityReceipt " + "\r\n";
+
+            queryString = queryString + "                   UNION ALL " + "\r\n";
+
+            queryString = queryString + "                   SELECT 'XE TRÊN ĐƯỜNG VỀ' AS GroupName, 'CHỜ NHẬP KHO' AS SubGroupName, PurchaseInvoices.EntryDate, GoodsReceiptDetails.CommodityID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, GoodsReceiptDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                   FROM    PurchaseInvoices INNER JOIN " + "\r\n";
+            queryString = queryString + "                           GoodsReceiptDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND PurchaseInvoices.LocationID = @LocationID AND PurchaseInvoices.PurchaseInvoiceID = GoodsReceiptDetails.VoucherID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + " AND PurchaseInvoices.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + "\r\n";
+
+            queryString = queryString + "                   UNION ALL " + "\r\n";
+            //EWHInputVoucherTypeID.EWHTransfer
+            queryString = queryString + "                   SELECT 'XE TRÊN ĐƯỜNG VỀ' AS GroupName, 'CHỜ NHẬP KHO' AS SubGroupName, StockTransfers.EntryDate, StockTransferDetails.CommodityID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, StockTransferDetails.Quantity - StockTransferDetails.QuantityReceipt AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                   FROM    StockTransfers INNER JOIN " + "\r\n";
+            queryString = queryString + "                           StockTransferDetails ON StockTransfers.StockTransferID = StockTransferDetails.StockTransferID AND StockTransferDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransfers.WarehouseID = @WarehouseID AND StockTransferDetails.EntryDate <= @ToDate AND StockTransferDetails.Quantity > StockTransferDetails.QuantityReceipt " + "\r\n";
+
+            queryString = queryString + "                   UNION ALL " + "\r\n";
+
+            queryString = queryString + "                   SELECT 'XE TRÊN ĐƯỜNG VỀ' AS GroupName, 'CHỜ NHẬP KHO' AS SubGroupName, StockTransfers.EntryDate, GoodsReceiptDetails.CommodityID, '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS WarehouseID, GoodsReceiptDetails.Quantity AS QuantityDebit, 0 AS QuantityCredit " + "\r\n";
+            queryString = queryString + "                   FROM    StockTransfers INNER JOIN " + "\r\n";
+            queryString = queryString + "                           GoodsReceiptDetails ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND StockTransfers.WarehouseID = @WarehouseID AND StockTransfers.StockTransferID = GoodsReceiptDetails.VoucherID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND StockTransfers.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + "\r\n";
+            //--ON INPUT.END
+
+            queryString = queryString + "                   ) AS VehicleJournalMaster INNER JOIN " + "\r\n";
+
+            queryString = queryString + "                   Commodities ON VehicleJournalMaster.CommodityID = Commodities.CommodityID INNER JOIN " + "\r\n";
+            queryString = queryString + "                   VWCommodityCategories ON Commodities.CommodityCategoryID = VWCommodityCategories.CommodityCategoryID LEFT JOIN " + "\r\n";
+
+            queryString = queryString + "                   Warehouses ON VehicleJournalMaster.WarehouseID = Warehouses.WarehouseID " + "\r\n";
+
+            queryString = queryString + "    END " + "\r\n";
+
+            this.totalBikePortalsEntities.CreateStoredProcedure("VehicleCard", queryString);
 
         }
 

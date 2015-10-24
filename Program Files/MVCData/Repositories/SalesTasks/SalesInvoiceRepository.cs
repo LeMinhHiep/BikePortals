@@ -41,11 +41,11 @@ namespace MVCData.Repositories.SalesTasks
         public VehiclesInvoiceRepository(TotalBikePortalsEntities totalBikePortalsEntities)
             : base(totalBikePortalsEntities, "VehiclesInvoiceEditable")
         {
-            /*
+            
             Helpers.SqlProgrammability.StockTasks.Inventories m = new Helpers.SqlProgrammability.StockTasks.Inventories(totalBikePortalsEntities);
             m.RestoreProcedure();
 
-
+            /*
             Helpers.SqlProgrammability.PurchaseTasks.PurchaseOrder o = new Helpers.SqlProgrammability.PurchaseTasks.PurchaseOrder(totalBikePortalsEntities);
             o.RestoreProcedure();
 
