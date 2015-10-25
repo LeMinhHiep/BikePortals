@@ -1,16 +1,20 @@
-﻿using System.Text;
+﻿using MVCBase.Enums;
 using MVCModel.Models;
-using MVCBase.Enums;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace MVCData.Helpers.SqlProgrammability.StockTasks
 {
-    public class Inventories
+    class Class1
     {
+        
 
         private readonly TotalBikePortalsEntities totalBikePortalsEntities;
 
-        public Inventories(TotalBikePortalsEntities totalBikePortalsEntities)
+        public Class1(TotalBikePortalsEntities totalBikePortalsEntities)
         {
             this.totalBikePortalsEntities = totalBikePortalsEntities;
         }
@@ -598,7 +602,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
                 // --ENDING: PENDING STOCKTRANSFER   //BEGIN
 
                 queryString = queryString + "                       UNION ALL" + "\r\n";
-                queryString = queryString + "                       SELECT      999999999 AS NMVNTaskID, 0 AS JournalPrimaryID, @ToDate - 1 AS JournalDate, '' AS JournalReference, '' AS JournalDescription, " + "\r\n";
+                queryString = queryString + "                       SELECT      0 AS NMVNTaskID, 0 AS JournalPrimaryID, @ToDate - 1 AS JournalDate, '' AS JournalReference, '' AS JournalDescription, " + "\r\n";
                 queryString = queryString + "                                   StockTransferDetails.CommodityID, StockTransfers.WarehouseID, 0 AS QuantityBeginREC, 0 AS QuantityBeginTRA, 0 AS AmountBegin, 0 AS QuantityInputINV, 0 AS UnitPriceInputINV, 0 AS AmountInputINV, 0 AS VATAmountInputINV, 0 AS GrossAmountInputINV, 0 AS QuantityInputTRA, 0 AS QuantityOutputINV, 0 AS AmountOutputINV, 0 AS QuantityOutputTRA, ROUND(StockTransferDetails.Quantity - StockTransferDetails.QuantityReceipt, " + (int)GlobalEnums.rndAmount + ") AS QuantityEndTRA, " + (isAmountIncluded ? "ISNULL(ROUND((StockTransferDetails.Quantity - StockTransferDetails.QuantityReceipt) * WarehouseBalancePrice.UnitPrice, " + (int)GlobalEnums.rndAmount + "), 0)" : "0") + " AS AmountEnd " + "\r\n";
                 queryString = queryString + "                       FROM        StockTransfers INNER JOIN " + "\r\n";
                 queryString = queryString + "                                   StockTransferDetails ON StockTransfers.EntryDate <= @ToDate AND ROUND(StockTransferDetails.Quantity - StockTransferDetails.QuantityReceipt, " + (int)GlobalEnums.rndAmount + ") > 0 " + this.WarehouseJournalWarehouseFilter("StockTransfers", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("StockTransferDetails", isCommodityFilter) + " AND StockTransfers.StockTransferID = StockTransferDetails.StockTransferID " + "\r\n";
@@ -607,7 +611,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
 
 
                 queryString = queryString + "                       UNION ALL" + "\r\n";
-                queryString = queryString + "                       SELECT      999999999 AS NMVNTaskID, 0 AS JournalPrimaryID, @ToDate - 1 AS JournalDate, '' AS JournalReference, '' AS JournalDescription, " + "\r\n";
+                queryString = queryString + "                       SELECT      0 AS NMVNTaskID, 0 AS JournalPrimaryID, @ToDate - 1 AS JournalDate, '' AS JournalReference, '' AS JournalDescription, " + "\r\n";
                 queryString = queryString + "                                   GoodsReceiptDetails.CommodityID, StockTransfers.WarehouseID, 0 AS QuantityBeginREC, 0 AS QuantityBeginTRA, 0 AS AmountBegin, 0 AS QuantityInputINV, 0 AS UnitPriceInputINV, 0 AS AmountInputINV, 0 AS VATAmountInputINV, 0 AS GrossAmountInputINV, 0 AS QuantityInputTRA, 0 AS QuantityOutputINV, 0 AS AmountOutputINV, 0 AS QuantityOutputTRA, GoodsReceiptDetails.Quantity AS QuantityEndTRA, " + (isAmountIncluded ? "ISNULL(ROUND(GoodsReceiptDetails.Quantity * WarehouseBalancePrice.UnitPrice, " + (int)GlobalEnums.rndAmount + "), 0)" : "0") + " AS AmountEnd " + "\r\n";
                 queryString = queryString + "                       FROM        StockTransfers INNER JOIN " + "\r\n";
                 queryString = queryString + "                                   GoodsReceiptDetails ON StockTransfers.EntryDate <= @ToDate AND GoodsReceiptDetails.EntryDate > @ToDate " + this.WarehouseJournalWarehouseFilter("StockTransfers", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("GoodsReceiptDetails", isCommodityFilter) + " AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND StockTransfers.StockTransferID = GoodsReceiptDetails.VoucherID " + "\r\n";
@@ -620,46 +624,33 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
 
 
             // --INPUT: IN-TERM OPENNING + INPUT   //BEGIN
-            //--------MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID)
-            // --INTPUT.PurchaseInvoice
             queryString = queryString + "                           UNION ALL" + "\r\n";
 
-            queryString = queryString + "                           SELECT      IIF(GoodsReceiptDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.GoodsReceipt + ", 0) AS NMVNTaskID, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.GoodsReceiptDetailID, 0) AS JournalPrimaryID, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.EntryDate, @FromDate - 1) AS JournalDate, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, 'Reference', '') AS JournalReference, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, Suppliers.Name + ', HĐ [' + ISNULL(PurchaseInvoices.VATInvoiceNo, '') + ' Ngày: ' + CONVERT(VARCHAR, PurchaseInvoices.EntryDate, 103) + ']' , '') AS JournalDescription, " + "\r\n";
+            queryString = queryString + "                           SELECT      IIF(GoodsReceiptDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.GoodsReceipt + ", 0) AS NMVNTaskID, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.GoodsReceiptDetailID, 0) AS JournalPrimaryID, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.EntryDate, @FromDate - 1) AS JournalDate, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.Origin, '') AS JournalReference, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.Origin, '') AS JournalDescription, " + "\r\n";
             queryString = queryString + "                                       GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.WarehouseID, IIF(GoodsReceiptDetails.EntryDate < @FromDate, GoodsReceiptDetails.Quantity, 0) AS QuantityBeginREC, 0 AS QuantityBeginTRA, 0 AS AmountBegin, IIF(GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + ", GoodsReceiptDetails.Quantity, 0) AS QuantityInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.UnitPrice, 0)" : "0") + " AS UnitPriceInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.Amount, 0)" : "0") + " AS AmountInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.VATAmount, 0)" : "0") + " AS VATAmountInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.GrossAmount, 0)" : "0") + " AS GrossAmountInputINV, IIF(GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + ", GoodsReceiptDetails.Quantity, 0) AS QuantityInputTRA, 0 AS QuantityOutputINV, 0 AS AmountOutputINV, 0 AS QuantityOutputTRA, 0 AS QuantityEndTRA, 0 AS AmountEnd " + "\r\n";
-            queryString = queryString + "                           FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       PurchaseInvoices ON GoodsReceiptDetails.VoucherID = PurchaseInvoices.PurchaseInvoiceID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.PurchaseInvoice + " AND GoodsReceiptDetails.EntryDate > @EntryDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("GoodsReceiptDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("GoodsReceiptDetails", isCommodityFilter) + " INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       Customers Suppliers ON PurchaseInvoices.SupplierID = Suppliers.CustomerID " + "\r\n";
+            queryString = queryString + "                           FROM        GoodsReceiptDetails " + "\r\n";
+            queryString = queryString + "                           WHERE       GoodsReceiptDetails.EntryDate > @EntryDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("GoodsReceiptDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("GoodsReceiptDetails", isCommodityFilter) + "\r\n";
 
-            // --INTPUT.StockTransfer
-            queryString = queryString + "                           UNION ALL" + "\r\n";
 
-            queryString = queryString + "                           SELECT      IIF(GoodsReceiptDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.GoodsReceipt + ", 0) AS NMVNTaskID, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.GoodsReceiptDetailID, 0) AS JournalPrimaryID, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.EntryDate, @FromDate - 1) AS JournalDate, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, 'Reference', '') AS JournalReference, IIF(GoodsReceiptDetails.EntryDate >= @FromDate, 'VCNB: ' + Locations.Name + ', PX [' + StockTransfers.Reference + ' Ngày: ' + CONVERT(VARCHAR, StockTransfers.EntryDate, 103) + ']' , '') AS JournalDescription, " + "\r\n";
-            queryString = queryString + "                                       GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.WarehouseID, IIF(GoodsReceiptDetails.EntryDate < @FromDate, GoodsReceiptDetails.Quantity, 0) AS QuantityBeginREC, 0 AS QuantityBeginTRA, 0 AS AmountBegin, IIF(GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + ", GoodsReceiptDetails.Quantity, 0) AS QuantityInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.UnitPrice, 0)" : "0") + " AS UnitPriceInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.Amount, 0)" : "0") + " AS AmountInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.VATAmount, 0)" : "0") + " AS VATAmountInputINV, " + (isFullJournal || isAmountIncluded ? "IIF(GoodsReceiptDetails.EntryDate >= @FromDate, GoodsReceiptDetails.GrossAmount, 0)" : "0") + " AS GrossAmountInputINV, IIF(GoodsReceiptDetails.EntryDate >= @FromDate AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + ", GoodsReceiptDetails.Quantity, 0) AS QuantityInputTRA, 0 AS QuantityOutputINV, 0 AS AmountOutputINV, 0 AS QuantityOutputTRA, 0 AS QuantityEndTRA, 0 AS AmountEnd " + "\r\n";
-            queryString = queryString + "                           FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       StockTransfers ON GoodsReceiptDetails.VoucherID = StockTransfers.StockTransferID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND GoodsReceiptDetails.EntryDate > @EntryDate AND GoodsReceiptDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("GoodsReceiptDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("GoodsReceiptDetails", isCommodityFilter) + " INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       Locations ON StockTransfers.LocationID = Locations.LocationID " + "\r\n";
             // --INPUT: IN-TERM OPENNING + INPUT   //END
-
 
             // --OUTPUT: IN-TERM OPENNING + OUTPUT //BEGIN
             queryString = queryString + "                           UNION ALL" + "\r\n";
 
-            queryString = queryString + "                           SELECT      IIF(SalesInvoiceDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.SalesInvoice + ", 0) AS NMVNTaskID, IIF(SalesInvoiceDetails.EntryDate >= @FromDate, SalesInvoiceDetails.SalesInvoiceID, 0) AS JournalPrimaryID, IIF(SalesInvoiceDetails.EntryDate >= @FromDate, SalesInvoiceDetails.EntryDate, @FromDate - 1) AS JournalDate, IIF(SalesInvoiceDetails.EntryDate >= @FromDate, 'Reference', '') AS JournalReference, IIF(SalesInvoiceDetails.EntryDate >= @FromDate, Customers.Name + ', Đ/C: ' + Customers.AddressNo, '') AS JournalDescription, " + "\r\n";
+            queryString = queryString + "                           SELECT      IIF(SalesInvoiceDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.SalesInvoice + ", 0) AS NMVNTaskID, 0 JournalPrimaryID, @FromDate - 1 AS JournalDate, '' JournalReference, '' AS JournalDescription, " + "\r\n";
             queryString = queryString + "                                       SalesInvoiceDetails.CommodityID, SalesInvoiceDetails.WarehouseID, IIF(SalesInvoiceDetails.EntryDate < @FromDate, -SalesInvoiceDetails.Quantity, 0) AS QuantityBeginREC, 0 AS QuantityBeginTRA, 0 AS AmountBegin, 0 AS QuantityInputINV, 0 AS UnitPriceInputINV, 0 AS AmountInputINV, 0 AS VATAmountInputINV, 0 AS GrossAmountInputINV, 0 AS QuantityInputTRA, IIF(SalesInvoiceDetails.EntryDate >= @FromDate, SalesInvoiceDetails.Quantity, 0) AS QuantityOutputINV, " + (isAmountIncluded ? "IIF(SalesInvoiceDetails.EntryDate >= @FromDate, ROUND(SalesInvoiceDetails.Quantity * WarehouseBalancePrice.UnitPrice, " + (int)GlobalEnums.rndAmount + "), 0)" : "0") + " AS AmountOutputINV, 0 AS QuantityOutputTRA, 0 AS QuantityEndTRA, 0 AS AmountEnd " + "\r\n";
-            queryString = queryString + "                           FROM        SalesInvoiceDetails INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       Customers ON SalesInvoiceDetails.EntryDate > @EntryDate AND SalesInvoiceDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("SalesInvoiceDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("SalesInvoiceDetails", isCommodityFilter) + " AND SalesInvoiceDetails.CustomerID = Customers.CustomerID " + "\r\n";
+            queryString = queryString + "                           FROM        SalesInvoiceDetails " + "\r\n";
             if (isAmountIncluded)
                 queryString = queryString + "                                   LEFT JOIN WarehouseBalancePrice ON WarehouseBalancePrice.EntryDate = dbo.EOMONTHTIME(@ToDate, 9999) AND SalesInvoiceDetails.CommodityID = WarehouseBalancePrice.CommodityID " + "\r\n";
-            
+            queryString = queryString + "                           WHERE       SalesInvoiceDetails.EntryDate > @EntryDate AND SalesInvoiceDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("SalesInvoiceDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("SalesInvoiceDetails", isCommodityFilter) + "\r\n";
+
 
             queryString = queryString + "                           UNION ALL" + "\r\n";
 
-            queryString = queryString + "                           SELECT      IIF(StockTransferDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.StockTransfer + ", 0) AS NMVNTaskID, IIF(StockTransferDetails.EntryDate >= @FromDate, StockTransferDetails.StockTransferID, 0) AS JournalPrimaryID, IIF(StockTransferDetails.EntryDate >= @FromDate, StockTransferDetails.EntryDate, @FromDate - 1) AS JournalDate, IIF(StockTransferDetails.EntryDate >= @FromDate, 'Reference', '') AS JournalReference, IIF(StockTransferDetails.EntryDate >= @FromDate, 'VCNB: ' + Warehouses.Name, '') AS JournalDescription, " + "\r\n";
+            queryString = queryString + "                           SELECT      IIF(StockTransferDetails.EntryDate >= @FromDate, " + (int)GlobalEnums.NmvnTaskID.StockTransfer + ", 0) AS NMVNTaskID, 0 JournalPrimaryID, @FromDate - 1 AS JournalDate, '' JournalReference, '' AS JournalDescription, " + "\r\n";
             queryString = queryString + "                                       StockTransferDetails.CommodityID, StockTransferDetails.WarehouseID, IIF(StockTransferDetails.EntryDate < @FromDate, -StockTransferDetails.Quantity, 0) AS QuantityBeginREC, 0 AS QuantityBeginTRA, 0 AS AmountBegin, 0 AS QuantityInputINV, 0 AS UnitPriceInputINV, 0 AS AmountInputINV, 0 AS VATAmountInputINV, 0 AS GrossAmountInputINV, 0 AS QuantityInputTRA, 0 AS QuantityOutputINV, 0 AS AmountOutputINV, IIF(StockTransferDetails.EntryDate >= @FromDate, StockTransferDetails.Quantity, 0) AS QuantityOutputTRA, 0 AS QuantityEndTRA, 0 AS AmountEnd " + "\r\n";
-            queryString = queryString + "                           FROM        StockTransferDetails INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       StockTransfers ON StockTransferDetails.EntryDate > @EntryDate AND StockTransferDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("StockTransferDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("StockTransferDetails", isCommodityFilter) + " AND StockTransferDetails.StockTransferID = StockTransfers.StockTransferID INNER JOIN " + "\r\n";
-            queryString = queryString + "                                       Warehouses ON StockTransfers.WarehouseID = Warehouses.WarehouseID " + "\r\n";
-            
+            queryString = queryString + "                           FROM        StockTransferDetails " + "\r\n";
+            queryString = queryString + "                           WHERE       EntryDate > @EntryDate AND EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter(isWarehouseFilter) + this.WarehouseJournalCommodityFilter(isCommodityFilter) + "\r\n";
             // --OUTPUT: IN-TERM OPENNING + OUTPUT //END
 
 
