@@ -13,6 +13,8 @@ namespace MVCDTO.SalesTasks
         public int SalesInvoiceDetailID { get; set; }
         public int SalesInvoiceID { get; set; }
 
+        public int CustomerID { get; set; }
+
         public Nullable<int> QuotationDetailID { get; set; }
 
         public int CommodityID { get; set; }

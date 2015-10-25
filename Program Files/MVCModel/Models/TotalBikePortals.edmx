@@ -489,6 +489,7 @@
           <Property Name="EntryDate" Type="datetime" Nullable="false" />
           <Property Name="LocationID" Type="int" Nullable="false" />
           <Property Name="SalesInvoiceID" Type="int" Nullable="false" />
+          <Property Name="CustomerID" Type="int" Nullable="false" />
           <Property Name="GoodsReceiptDetailID" Type="int" />
           <Property Name="QuotationDetailID" Type="int" />
           <Property Name="CommodityID" Type="int" Nullable="false" />
@@ -707,7 +708,7 @@
           <Key>
             <PropertyRef Name="Id" />
           </Key>
-          <Property Name="Id" Type="int" Nullable="false" />
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
           <Property Name="STT" Type="float" />
           <Property Name="WarehouseID" Type="int" />
           <Property Name="WarehouseCode" Type="nvarchar" MaxLength="255" />
@@ -3943,6 +3944,7 @@
           <NavigationProperty Name="QuotationDetail" Relationship="TotalBikePortalsModel.FK_SalesInvoiceDetails_QuotationDetails" FromRole="SalesInvoiceDetail" ToRole="QuotationDetail" />
           <Property Name="LocationID" Type="Int32" Nullable="false" />
           <Property Name="IsBonus" Type="Boolean" />
+          <Property Name="CustomerID" Type="Int32" Nullable="false" />
         </EntityType>
         <Association Name="FK_Commodities_CommodityCategories">
           <End Type="TotalBikePortalsModel.CommodityCategory" Role="CommodityCategory" Multiplicity="1" />
@@ -5495,6 +5497,7 @@
           <EntitySetMapping Name="SalesInvoiceDetails">
             <EntityTypeMapping TypeName="TotalBikePortalsModel.SalesInvoiceDetail">
               <MappingFragment StoreEntitySet="SalesInvoiceDetails">
+                <ScalarProperty Name="CustomerID" ColumnName="CustomerID" />
                 <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
                 <ScalarProperty Name="LocationID" ColumnName="LocationID" />
                 <ScalarProperty Name="Remarks" ColumnName="Remarks" />
