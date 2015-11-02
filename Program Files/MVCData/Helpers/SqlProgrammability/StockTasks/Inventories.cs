@@ -23,6 +23,8 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             this.WarehouseJournal();
             this.VehicleJournal();
             this.VehicleCard();
+
+            this.SalesInvoiceJournal();
         }
 
 
@@ -465,7 +467,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
 
 
             queryString = queryString + "       IF         (@isFullJournal = 0 AND @IsAmountIncluded = 0) " + "\r\n";
-            
+
             queryString = queryString + "                   BEGIN " + "\r\n";
             queryString = queryString + "                       IF          (@WarehouseIDList = '' AND @CommodityIDList = '') " + "\r\n";
             queryString = queryString + "                                   " + this.WarehouseJournalBuildSQLA(false, false, false, false) + "\r\n";
@@ -476,7 +478,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                       ELSE        " + "\r\n"; //(@WarehouseIDList <> '' AND @CommodityIDList <> '') 
             queryString = queryString + "                                   " + this.WarehouseJournalBuildSQLA(false, false, true, true) + "\r\n";
             queryString = queryString + "                   END " + "\r\n";
-            
+
             queryString = queryString + "       ELSE    IF  (@isFullJournal = 1 AND @IsAmountIncluded = 0) " + "\r\n";
 
             queryString = queryString + "                   BEGIN " + "\r\n";
@@ -650,7 +652,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                                       Customers ON SalesInvoiceDetails.EntryDate > @EntryDate AND SalesInvoiceDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("SalesInvoiceDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("SalesInvoiceDetails", isCommodityFilter) + " AND SalesInvoiceDetails.CustomerID = Customers.CustomerID " + "\r\n";
             if (isAmountIncluded)
                 queryString = queryString + "                                   LEFT JOIN WarehouseBalancePrice ON WarehouseBalancePrice.EntryDate = dbo.EOMONTHTIME(@ToDate, 9999) AND SalesInvoiceDetails.CommodityID = WarehouseBalancePrice.CommodityID " + "\r\n";
-            
+
 
             queryString = queryString + "                           UNION ALL" + "\r\n";
 
@@ -659,7 +661,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                           FROM        StockTransferDetails INNER JOIN " + "\r\n";
             queryString = queryString + "                                       StockTransfers ON StockTransferDetails.EntryDate > @EntryDate AND StockTransferDetails.EntryDate <= @ToDate " + this.WarehouseJournalWarehouseFilter("StockTransferDetails", isWarehouseFilter) + this.WarehouseJournalCommodityFilter("StockTransferDetails", isCommodityFilter) + " AND StockTransferDetails.StockTransferID = StockTransfers.StockTransferID INNER JOIN " + "\r\n";
             queryString = queryString + "                                       Warehouses ON StockTransfers.WarehouseID = Warehouses.WarehouseID " + "\r\n";
-            
+
             // --OUTPUT: IN-TERM OPENNING + OUTPUT //END
 
 
@@ -879,7 +881,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                   FROM        GoodsReceiptDetails INNER JOIN " + "\r\n";
             queryString = queryString + "                               StockTransfers ON GoodsReceiptDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND GoodsReceiptDetails.WarehouseID = @WarehouseID AND GoodsReceiptDetails.VoucherID = StockTransfers.StockTransferID AND GoodsReceiptDetails.GoodsReceiptTypeID = " + (int)GlobalEnums.GoodsReceiptTypeID.StockTransfer + " AND GoodsReceiptDetails.Quantity > GoodsReceiptDetails.QuantityIssue AND GoodsReceiptDetails.EntryDate < @FromDate INNER JOIN " + "\r\n";
             queryString = queryString + "                               Locations ON StockTransfers.LocationID = Locations.LocationID " + "\r\n";
-             
+
             queryString = queryString + "                   UNION ALL " + "\r\n";
             //1.2.UNDO (CAC CAU SQL CHO INVOICE, StockTransferDetails, WHADJUST, WHASSEMBLY LA HOAN TOAN GIONG NHAU. LUU Y T/H DAT BIET: WHADJUST.QUANTITY < 0)
             //1.2.1.1.UNDO SalesInvoiceDetails (MUST USE TWO SEPERATE SQL TO GET THE GoodsReceiptTypeID (VoucherID)).PurchaseInvoice
@@ -938,7 +940,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                   FROM        SalesInvoiceDetails INNER JOIN " + "\r\n";
             queryString = queryString + "                               GoodsReceiptDetails ON SalesInvoiceDetails.CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + " AND SalesInvoiceDetails.WarehouseID = @WarehouseID AND SalesInvoiceDetails.GoodsReceiptDetailID = GoodsReceiptDetails.GoodsReceiptDetailID AND SalesInvoiceDetails.EntryDate >= @FromDate AND SalesInvoiceDetails.EntryDate <= @ToDate INNER JOIN " + "\r\n";
             queryString = queryString + "                               Customers ON SalesInvoiceDetails.CustomerID = Customers.CustomerID " + "\r\n";
-            
+
             queryString = queryString + "                   UNION ALL " + "\r\n";
             //3.2.StockTransferDetails
             queryString = queryString + "                   SELECT     'XE TAI KHO' AS GroupName, CONVERT(VARCHAR, @FromDate, 103) + ' -> ' + CONVERT(VARCHAR, @ToDate, 103) AS SubGroupName, StockTransferDetails.EntryDate, GoodsReceiptDetails.CommodityID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.WarehouseID, 'XUAT VCNB: ' + Warehouses.Name AS Description, 0 AS QuantityDebit, StockTransferDetails.Quantity AS QuantityCredit " + "\r\n";
@@ -948,7 +950,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "                               Warehouses ON StockTransfers.WarehouseID = Warehouses.WarehouseID " + "\r\n";
             //--BEGIN-INPUT-OUTPUT-END.END
 
-            
+
 
             //B.PENDING
             //B.1.PENDING.ON SHIP
@@ -1074,38 +1076,75 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
 
 
 
+        private void SalesInvoiceJournal()
+        {
+            string queryString = " @LocationID int, @CommodityTypeID int, @FromDate DateTime, @ToDate DateTime " + "\r\n";
+            queryString = queryString + " WITH ENCRYPTION " + "\r\n";
+            queryString = queryString + " AS " + "\r\n";
+            queryString = queryString + "    BEGIN " + "\r\n";
 
-//        SELECT        SalesInvoiceDetails.EntryDate, Customers.CustomerID, Customers.Name AS CustomerName, Commodities.CommodityID, Commodities.Code, Commodities.Name, SalesInvoiceDetails.CommodityTypeID, 
-//                         SalesInvoiceDetails.WarehouseID, GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, SalesInvoiceDetails.Quantity, 
-//                         GoodsReceiptDetails.UnitPrice AS CostPrice, SalesInvoiceDetails.DiscountPercent, SalesInvoiceDetails.UnitPrice, SalesInvoiceDetails.Amount, SalesInvoiceDetails.VATAmount, 
-//                         SalesInvoiceDetails.GrossAmount
-//FROM            SalesInvoiceDetails INNER JOIN
-//                         Commodities ON SalesInvoiceDetails.CommodityID = Commodities.CommodityID INNER JOIN
-//                         Customers ON SalesInvoiceDetails.CustomerID = Customers.CustomerID INNER JOIN
-//                         GoodsReceiptDetails ON SalesInvoiceDetails.GoodsReceiptDetailID = GoodsReceiptDetails.GoodsReceiptDetailID INNER JOIN
-//                         VWCommodityCategories ON Commodities.CommodityCategoryID = VWCommodityCategories.CommodityCategoryID
+            queryString = queryString + "       IF          (@CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Vehicles + ") " + "\r\n";
+            queryString = queryString + "                   " + this.SalesInvoiceJournalBuild(GlobalEnums.CommodityTypeID.Vehicles) + "\r\n";
+            queryString = queryString + "       ELSE    IF  (@CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Parts + ")  " + "\r\n";
+            queryString = queryString + "                   " + this.SalesInvoiceJournalBuild(GlobalEnums.CommodityTypeID.Parts) + "\r\n";
+            queryString = queryString + "       ELSE    IF  (@CommodityTypeID = " + (int)GlobalEnums.CommodityTypeID.Consumables + ")  " + "\r\n";
+            queryString = queryString + "                   " + this.SalesInvoiceJournalBuild(GlobalEnums.CommodityTypeID.Consumables) + "\r\n";
+            queryString = queryString + "       ELSE        " + "\r\n";
+            queryString = queryString + "                   " + this.SalesInvoiceJournalBuild(GlobalEnums.CommodityTypeID.Services) + "\r\n";
 
+            queryString = queryString + "    END " + "\r\n";
 
-
-
-//        SELECT        SalesInvoiceDetails.EntryDate, Customers.CustomerID, Customers.Name AS CustomerName, Commodities.CommodityID, Commodities.Code, Commodities.Name, SalesInvoiceDetails.CommodityTypeID, 
-//                         SalesInvoiceDetails.WarehouseID, SalesInvoiceDetails.Quantity, WarehouseBalancePrice.UnitPrice AS CostPrice, SalesInvoiceDetails.DiscountPercent, SalesInvoiceDetails.UnitPrice, SalesInvoiceDetails.Amount, SalesInvoiceDetails.VATAmount, 
-//                         SalesInvoiceDetails.GrossAmount
-//FROM            SalesInvoiceDetails INNER JOIN
-//                         Commodities ON (SalesInvoiceDetails.CommodityTypeID = 2 OR SalesInvoiceDetails.CommodityTypeID = 3) AND SalesInvoiceDetails.CommodityID = Commodities.CommodityID INNER JOIN
-//                         Customers ON SalesInvoiceDetails.CustomerID = Customers.CustomerID INNER JOIN
-//                         VWCommodityCategories ON Commodities.CommodityCategoryID = VWCommodityCategories.CommodityCategoryID INNER JOIN
-//                         WarehouseBalancePrice ON SalesInvoiceDetails.CommodityID = WarehouseBalancePrice.CommodityID AND MONTH(SalesInvoiceDetails.EntryDate) = MONTH(WarehouseBalancePrice.EntryDate) AND YEAR(SalesInvoiceDetails.EntryDate) = YEAR(WarehouseBalancePrice.EntryDate)
+            this.totalBikePortalsEntities.CreateStoredProcedure("SalesInvoiceJournal", queryString);
+        }
 
 
+        private string SalesInvoiceJournalBuild(GlobalEnums.CommodityTypeID commodityTypeID)
+        {
+            string queryString = "";
 
-//        SELECT        SalesInvoiceDetails.EntryDate, Customers.CustomerID, Customers.Name AS CustomerName, Commodities.CommodityID, Commodities.Code, Commodities.Name, SalesInvoiceDetails.CommodityTypeID, 
-//                         SalesInvoiceDetails.WarehouseID, SalesInvoiceDetails.Quantity, SalesInvoiceDetails.DiscountPercent, SalesInvoiceDetails.UnitPrice, SalesInvoiceDetails.Amount, SalesInvoiceDetails.VATAmount, 
-//                         SalesInvoiceDetails.GrossAmount
-//FROM            SalesInvoiceDetails INNER JOIN
-//                         Commodities ON SalesInvoiceDetails.CommodityID = Commodities.CommodityID INNER JOIN
-//                         Customers ON SalesInvoiceDetails.CustomerID = Customers.CustomerID INNER JOIN
-//                         VWCommodityCategories ON Commodities.CommodityCategoryID = VWCommodityCategories.CommodityCategoryID
+            queryString = queryString + "   BEGIN " + "\r\n";
+            queryString = queryString + "       IF          (@LocationID = 0) " + "\r\n";
+            queryString = queryString + "                   " + this.SalesInvoiceJournalBuildDetail(commodityTypeID, false) + "\r\n";
+            queryString = queryString + "       ELSE        " + "\r\n";
+            queryString = queryString + "                   " + this.SalesInvoiceJournalBuildDetail(commodityTypeID, true) + "\r\n";
+            queryString = queryString + "   END " + "\r\n";
+
+            return queryString;
+
+        }
+
+        private string SalesInvoiceJournalBuildDetail(GlobalEnums.CommodityTypeID commodityTypeID, bool locationFilter)
+        {
+            string queryString = "";
+
+            queryString = queryString + "   BEGIN " + "\r\n";
+
+            queryString = queryString + "       SELECT      SalesInvoiceDetails.EntryDate, Customers.CustomerID, Customers.Name AS CustomerName, Commodities.CommodityID, Commodities.Code, Commodities.Name, SalesInvoiceDetails.CommodityTypeID, SalesInvoiceDetails.WarehouseID, " + "\r\n";
+            queryString = queryString + "                   SalesInvoiceDetails.Quantity, SalesInvoiceDetails.DiscountPercent, SalesInvoiceDetails.UnitPrice, SalesInvoiceDetails.Amount, SalesInvoiceDetails.VATAmount, SalesInvoiceDetails.GrossAmount, " + "\r\n";
+
+            if (commodityTypeID == GlobalEnums.CommodityTypeID.Vehicles)
+                queryString = queryString + "               GoodsReceiptDetails.ChassisCode, GoodsReceiptDetails.EngineCode, GoodsReceiptDetails.ColorCode, GoodsReceiptDetails.UnitPrice AS CostPrice " + "\r\n";
+            else
+                if (commodityTypeID == GlobalEnums.CommodityTypeID.Parts || commodityTypeID == GlobalEnums.CommodityTypeID.Consumables)
+                    queryString = queryString + "           '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, WarehouseBalancePrice.UnitPrice AS CostPrice " + "\r\n";
+                else
+                    queryString = queryString + "           '' AS ChassisCode, '' AS EngineCode, '' AS ColorCode, 0 AS CostPrice " + "\r\n";
+
+            queryString = queryString + "       FROM        SalesInvoiceDetails INNER JOIN " + "\r\n";
+            queryString = queryString + "                   Commodities ON SalesInvoiceDetails.EntryDate >= @FromDate AND SalesInvoiceDetails.EntryDate <= @ToDate AND SalesInvoiceDetails.CommodityTypeID = " + (int)commodityTypeID + (locationFilter ? " AND SalesInvoiceDetails.LocationID = @LocationID" : "") + " AND SalesInvoiceDetails.CommodityID = Commodities.CommodityID INNER JOIN " + "\r\n";
+            queryString = queryString + "                   Customers ON SalesInvoiceDetails.CustomerID = Customers.CustomerID INNER JOIN " + "\r\n";
+            queryString = queryString + "                   VWCommodityCategories ON Commodities.CommodityCategoryID = VWCommodityCategories.CommodityCategoryID " + "\r\n";
+
+            if (commodityTypeID == GlobalEnums.CommodityTypeID.Vehicles)
+                queryString = queryString + "               INNER JOIN GoodsReceiptDetails ON SalesInvoiceDetails.GoodsReceiptDetailID = GoodsReceiptDetails.GoodsReceiptDetailID " + "\r\n";
+            else
+                if (commodityTypeID == GlobalEnums.CommodityTypeID.Parts || commodityTypeID == GlobalEnums.CommodityTypeID.Consumables)
+                    queryString = queryString + "           INNER JOIN WarehouseBalancePrice ON SalesInvoiceDetails.CommodityID = WarehouseBalancePrice.CommodityID AND MONTH(SalesInvoiceDetails.EntryDate) = MONTH(WarehouseBalancePrice.EntryDate) AND YEAR(SalesInvoiceDetails.EntryDate) = YEAR(WarehouseBalancePrice.EntryDate) " + "\r\n";
+
+            queryString = queryString + "   END " + "\r\n";
+
+            return queryString;
+        }
 
 
     }

@@ -1582,6 +1582,7 @@
     <Content Include="Views\TransferOrders\Delete.cshtml" />
     <Content Include="Views\VehicleTransfers\Delete.cshtml" />
     <Content Include="Views\Inventories\VehicleCard.cshtml" />
+    <Content Include="Views\Inventories\SalesInvoiceJournal.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -23,5 +23,11 @@ namespace MVCClient.Controllers.Analysis
         {
             return View();
         }
+
+        public ActionResult SalesInvoiceJournal()
+        {
+            return View();
+        }
+        
     }
 }
