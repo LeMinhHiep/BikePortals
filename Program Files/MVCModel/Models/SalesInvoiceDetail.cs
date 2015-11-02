@@ -44,6 +44,7 @@ namespace MVCModel.Models
         public int LocationID { get; set; }
         public Nullable<bool> IsBonus { get; set; }
         public int CustomerID { get; set; }
+        public Nullable<int> ServiceInvoiceID { get; set; }
     
         public virtual Commodity Commodity { get; set; }
         public virtual GoodsReceiptDetail GoodsReceiptDetail { get; set; }

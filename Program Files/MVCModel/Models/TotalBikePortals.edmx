@@ -489,6 +489,7 @@
           <Property Name="EntryDate" Type="datetime" Nullable="false" />
           <Property Name="LocationID" Type="int" Nullable="false" />
           <Property Name="SalesInvoiceID" Type="int" Nullable="false" />
+          <Property Name="ServiceInvoiceID" Type="int" />
           <Property Name="CustomerID" Type="int" Nullable="false" />
           <Property Name="GoodsReceiptDetailID" Type="int" />
           <Property Name="QuotationDetailID" Type="int" />
@@ -3945,6 +3946,7 @@
           <Property Name="LocationID" Type="Int32" Nullable="false" />
           <Property Name="IsBonus" Type="Boolean" />
           <Property Name="CustomerID" Type="Int32" Nullable="false" />
+          <Property Name="ServiceInvoiceID" Type="Int32" />
         </EntityType>
         <Association Name="FK_Commodities_CommodityCategories">
           <End Type="TotalBikePortalsModel.CommodityCategory" Role="CommodityCategory" Multiplicity="1" />
@@ -5497,6 +5499,7 @@
           <EntitySetMapping Name="SalesInvoiceDetails">
             <EntityTypeMapping TypeName="TotalBikePortalsModel.SalesInvoiceDetail">
               <MappingFragment StoreEntitySet="SalesInvoiceDetails">
+                <ScalarProperty Name="ServiceInvoiceID" ColumnName="ServiceInvoiceID" />
                 <ScalarProperty Name="CustomerID" ColumnName="CustomerID" />
                 <ScalarProperty Name="IsBonus" ColumnName="IsBonus" />
                 <ScalarProperty Name="LocationID" ColumnName="LocationID" />

@@ -116,6 +116,8 @@ namespace MVCDTO.SalesTasks
 
     public class PartsInvoiceDetailDTO : StockableInvoiceDetailDTO
     {
+        public Nullable<int> ServiceInvoiceID { get; set; }
+
         [UIHint("NMVN/CommoditiesInWarehousesAutoComplete")]
         public override string CommodityName { get; set; }
     }
