@@ -145,19 +145,19 @@ namespace MVCClient.Controllers.Init3006
             PurchaseOrderDTO purchaseOrderDTO = null;
             CommoditiesApiController commoditiesApi = new CommoditiesApiController(this.commodityRepository);
 
-            string donHANG = ""; int countRow = 0; int warehouseID = 0;
+            string loHANG = ""; int countRow = 0; int warehouseID = 0;
 
 
-            ICollection<RAWDATA_07_2015> RAWDATA_07_2015s = this.purchaseOrderRepository.GetEntities<RAWDATA_07_2015>().Where(w => w.WarehouseID == this.purchaseOrderService.LocationID).OrderBy(o => o.DONHANG).ToList();
+            ICollection<RAWDATA_07_2015> RAWDATA_07_2015s = this.purchaseOrderRepository.GetEntities<RAWDATA_07_2015>().Where(w => w.WarehouseID == this.purchaseOrderService.LocationID).OrderBy(o => o.LOHANG).ToList();
             foreach (RAWDATA_07_2015 RAWDATA_07_2015 in RAWDATA_07_2015s)
             {
                 countRow = countRow + 1;
 
-                if (donHANG != RAWDATA_07_2015.DONHANG || countRow > 30)
+                if (loHANG != RAWDATA_07_2015.LOHANG || countRow > 30)
                 {
                     if (purchaseOrderDTO != null) this.SaveInit3006(purchaseOrderDTO, warehouseID); //Luu y: Moi lan RUN cai foreach nay: la chi load THE SAME WarehouseID, VI VAY, CAI RAWDATA_07_2015.WarehouseID LUON GIONG NHAU
 
-                    donHANG = RAWDATA_07_2015.DONHANG;
+                    loHANG = RAWDATA_07_2015.LOHANG;
                     countRow = 0;
 
                     purchaseOrderDTO = new PurchaseOrderDTO();
@@ -168,7 +168,7 @@ namespace MVCClient.Controllers.Init3006
                     purchaseOrderDTO.PreparedPersonID = this.purchaseOrderService.UserID;
                     purchaseOrderDTO.ApproverID = this.purchaseOrderService.UserID;
 
-                    purchaseOrderDTO.ConfirmReference = RAWDATA_07_2015.DONHANG + RAWDATA_07_2015.DONHANG != RAWDATA_07_2015.LOHANG ? " [" + RAWDATA_07_2015.LOHANG + "]" : "";
+                    purchaseOrderDTO.ConfirmReference = RAWDATA_07_2015.LOHANG + RAWDATA_07_2015.LOHANG != RAWDATA_07_2015.DONHANG ? " [" + RAWDATA_07_2015.DONHANG + "]" : "";
                 }
 
 
