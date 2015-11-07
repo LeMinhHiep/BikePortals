@@ -45,7 +45,7 @@ namespace MVCData.Repositories.SalesTasks
             Helpers.SqlProgrammability.StockTasks.Inventories m = new Helpers.SqlProgrammability.StockTasks.Inventories(totalBikePortalsEntities);
             m.RestoreProcedure();
 
-            /*
+            
             Helpers.SqlProgrammability.PurchaseTasks.PurchaseOrder o = new Helpers.SqlProgrammability.PurchaseTasks.PurchaseOrder(totalBikePortalsEntities);
             o.RestoreProcedure();
 
@@ -88,7 +88,7 @@ namespace MVCData.Repositories.SalesTasks
 
             Helpers.SqlProgrammability.CommonTasks.Commons cmm = new Helpers.SqlProgrammability.CommonTasks.Commons(totalBikePortalsEntities);
             cmm.RestoreProcedure();
-            */
+            
         }
 
         public IQueryable<SalesInvoiceDetail> DetailLoading(string aspUserID, GlobalEnums.NmvnTaskID nmvnTaskID)//for Loading (09/07/2015) - let review and optimize Loading laster
