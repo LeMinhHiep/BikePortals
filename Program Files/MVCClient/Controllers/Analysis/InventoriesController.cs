@@ -14,6 +14,11 @@ namespace MVCClient.Controllers.Analysis
             return View();
         }
 
+        public ActionResult WarehouseCard()
+        {
+            return View();
+        }
+
         public ActionResult VehicleJournal()
         {
             return View();
