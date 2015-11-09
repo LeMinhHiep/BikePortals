@@ -48,7 +48,7 @@ namespace MVCData.Helpers.SqlProgrammability.StockTasks
             queryString = queryString + "       IF NOT @CommodityIDList IS NULL " + "\r\n";
             queryString = queryString + "           BEGIN " + "\r\n";
             queryString = queryString + "               SET             @EntryDate = GETDATE() " + "\r\n"; //GET INVENTORY UP TO DATE
-            queryString = queryString + "               " + inventories.GET_WarehouseJournal_BUILD_SQL("@WarehouseJournalTable", "@EntryDate", "@EntryDate", "@WarehouseIDList", "@CommodityIDList", "0") + "\r\n";
+            queryString = queryString + "               " + inventories.GET_WarehouseJournal_BUILD_SQL("@WarehouseJournalTable", "@EntryDate", "@EntryDate", "@WarehouseIDList", "@CommodityIDList", "0", "0") + "\r\n";
             queryString = queryString + "               INSERT INTO     @CommoditiesAvailable (WarehouseID, CommodityID, QuantityAvailable) " + "\r\n";
             queryString = queryString + "               SELECT          WarehouseID, CommodityID, QuantityEndREC AS QuantityAvailable " + "\r\n";
             queryString = queryString + "               FROM            @WarehouseJournalTable " + "\r\n";

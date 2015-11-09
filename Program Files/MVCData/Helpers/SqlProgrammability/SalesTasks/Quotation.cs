@@ -45,7 +45,7 @@ namespace MVCData.Helpers.SqlProgrammability.SalesTasks
             queryString = queryString + "       SELECT      @WarehouseIDList = STUFF((SELECT ',' + CAST(WarehouseID as varchar)  FROM Warehouses WHERE LocationID = @LocationID FOR XML PATH('')) ,1,1,'') " + "\r\n";
             queryString = queryString + "       SELECT      @CommodityIDList = STUFF((SELECT ',' + CAST(CommodityID as varchar)  FROM QuotationDetails WHERE QuotationID = @QuotationID FOR XML PATH('')) ,1,1,'') " + "\r\n";
 
-            queryString = queryString + "       " + inventories.GET_WarehouseJournal_BUILD_SQL("@WarehouseJournalTable", "@EntryDate", "@EntryDate", "@WarehouseIDList", "@CommodityIDList", "0") + "\r\n";
+            queryString = queryString + "       " + inventories.GET_WarehouseJournal_BUILD_SQL("@WarehouseJournalTable", "@EntryDate", "@EntryDate", "@WarehouseIDList", "@CommodityIDList", "0", "0") + "\r\n";
 
             queryString = queryString + "       SELECT      QuotationDetails.QuotationDetailID, QuotationDetails.QuotationID, Commodities.CommodityID, Commodities.Code AS CommodityCode, Commodities.Name AS CommodityName, Commodities.CommodityTypeID, " + "\r\n";
             queryString = queryString + "                   CommoditiesAvailable.WarehouseID, CommoditiesAvailable.WarehouseCode, ISNULL(CommoditiesAvailable.QuantityAvailable, 0) AS QuantityAvailable, QuotationDetails.Quantity, QuotationDetails.QuantityInvoice, QuotationDetails.ListedPrice, QuotationDetails.DiscountPercent, QuotationDetails.UnitPrice, QuotationDetails.VATPercent, QuotationDetails.GrossPrice, QuotationDetails.Amount, QuotationDetails.VATAmount, QuotationDetails.GrossAmount, QuotationDetails.IsBonus, QuotationDetails.IsWarrantyClaim, QuotationDetails.Remarks " + "\r\n";
